@@ -4,7 +4,7 @@
 
 ## Description
 
-In mid-March/2020 we started a first attempt at dynamic UI generation, based on a schema definitions in JSON (**Data Driven UI**).
+In mid-March/2020 we started a first attempt at dynamic UI generation, based on a schema definitions in JSON (**Data Driven UI**) using the frameworks **Vue.js + Quasar**.
 
 The idea was to link to the database schema API, an API that provides UI definitions for forms related to tables and views (entities) in the database. These UI definitions would be structured in JSON format and a client-side interpreter would generate the UI based on JSON information (at the time in Vue.js 2.0 + Quasar framework 1.0).
 
