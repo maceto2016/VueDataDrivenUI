@@ -39,7 +39,7 @@ The JSON structure is as follows:
     - Main field properties (**_name, id, fieldType_**);
     - Other **optional** field control type specific properties.
 
-Below is an example of a JSON schema:
+Below is an example of a JSON schema used in this article:
 
 ```javascript
 export default {
