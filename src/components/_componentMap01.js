@@ -21,7 +21,7 @@ export default {
         // Form component
         form: () => import("./Form01"),
 
-        // Field components
+        // From field components
         inputtext: () => import("./Input01"),
         inputdate: () => import("./DateInput01"),
         inputtime: () => import("./TimeInput01"),

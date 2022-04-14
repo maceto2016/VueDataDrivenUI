@@ -1,129 +1,78 @@
 <template>
-  <!-- ROOT -->
-  <div>
-    <template>
-      <component v-if="fixedSchema" :is="componentMap['form']" ref="form">
-        <div>{{ getEventInfo + " - " + JSON.stringify(formData) }}</div>
-
-        <!--
-        =============================
-        Fields without parent groups
-        =============================
+  <!--
+        Dynamic wrapper `form` component
+        `fixedSchema` is the ajusted version of property `schema`
+      -->
+  <component v-if="fixedSchema" :is="componentMap['form']" ref="form">
+    <!-- 
+          Only shows information about the data input by the user
         -->
-        <div v-if="fixedSchema.fields && fixedSchema.fields.length > 0">
-          Todo...
-        </div>
-        <!--
+    <div>{{ getEventInfo + " - " + JSON.stringify(formData) }}</div>
+
+    <!--
         ==================  
         Groups with fields
         ==================
         -->
-        <div v-if="fixedSchema.groups && fixedSchema.groups.length > 0">
-          <!--
-          ===========     
-          CARD Model
-          ===========
-          -->
-          <slot
-            name="group-card"
-            :fixedSchema="fixedSchema"
-            v-if="fixedSchema.groupModel == 'card'"
-          >
-            <!--          
-            <component
-              v-for="(group, index) in fixedSchema.groups"
-              :is="componentMap['card']"
-              :key="index"
-              v-bind="group"
-            >
-              {{ group.name + " - todo..." }}
-            </component>
-            -->
-          </slot>
-          <!--
-          ===============  
-          EXPANSION Model
-          ===============
-          -->
-          <slot
-            name="group-expansion"
-            :fixedSchema="fixedSchema"
-            v-else-if="fixedSchema.groupModel == 'expansion'"
-          >
-            <!--
-            <component
-              v-for="(group, index) in fixedSchema.groups"
-              :is="componentMap['expansion']"
-              :key="index"
-              v-bind="group"
-            >
-              {{ group.name + " - todo..." }}
-            </component>
-            -->
-          </slot>
-          <!--
+    <div v-if="fixedSchema.groups && fixedSchema.groups.length > 0">
+      <!--
           ==========
           TAB Model
           ==========
           -->
-          <slot
-            name="group-tab"
-            :fixedSchema="fixedSchema"
-            v-else-if="fixedSchema.groupModel == 'tab'"
-          >
-            <component :is="componentMap['tabs']" v-model="selectedGroup" dense>
-              <component
-                v-for="(group, index) in fixedSchema.groups"
-                :is="componentMap['tab']"
-                :key="index"
-                v-bind="group"
-              >
-              </component>
-            </component>
-
-            <q-separator />
-
-            <component
-              v-for="(group, index) in fixedSchema.groups"
-              :is="componentMap['tabpanel']"
-              :key="index"
-              :selected="selectedGroup"
-              v-bind="group"
-            >
-              <div v-if="group.fields && group.fields.length > 0">
-                <component
-                  v-for="(field, index) in validFieldComps(group.fields)"
-                  :key="index"
-                  :is="componentMap[field.fieldType]"
-                  v-model="formData[field.name]"
-                  v-bind="field"
-                  v-show="!field.hidden"
-                >
-                </component>
-              </div>
-            </component>
-          </slot>
-          <!--
-          =============          
-          OTHER Models
-          =============
+      <!--
+            Dynamic `tab` component
           -->
-          <slot name="group" :fixedSchema="fixedSchema" v-else>
-            <!--
-            <component
-              v-for="(group, index) in fixedSchema.groups"
-              :is="componentMap[schema.groupModel]"
-              :key="index"
-              v-bind="group"
-            >
-              {{ group.name + " - todo..." }}
-            </component>
+      <component
+        v-if="fixedSchema.groupModel == 'tab'"
+        :is="componentMap['tabs']"
+        v-model="selectedGroup"
+        dense
+      >
+        <!--
+              Dynamic `tab itens` components  
             -->
-          </slot>
+        <component
+          v-for="(group, index) in fixedSchema.groups"
+          :is="componentMap['tab']"
+          :key="index"
+          v-bind="group"
+        >
+        </component>
+      </component>
+
+      <q-separator />
+
+      <!--
+            Dynamic `tabpanel` component
+          -->
+      <component
+        v-for="(group, index) in fixedSchema.groups"
+        :is="componentMap['tabpanel']"
+        :key="index"
+        :selected="selectedGroup"
+        v-bind="group"
+      >
+        <div v-if="group.fields && group.fields.length > 0">
+          <!--
+                And finally all UI field controls:
+                - Compoenent type specified by `componentMap[field.fieldType]`
+                - Data contents linked to `formData[field.name]` by `v-model`
+                - All `field` properties linked by `v-bind`
+              -->
+          <component
+            v-for="(field, index) in validFieldComps(group.fields)"
+            :key="index"
+            :is="componentMap[field.fieldType]"
+            v-model="formData[field.name]"
+            v-bind="field"
+            v-show="!field.hidden"
+          >
+          </component>
         </div>
       </component>
-    </template>
-  </div>
+    </div>
+  </component>
 </template>
 
 <script>
@@ -197,7 +146,7 @@ export default {
     };
   },
   props: {
-    // The component schema
+    // The schema placeholder property
     schema: {
       type: Object,
     },

@@ -6,11 +6,11 @@
 
 In mid-March/2020 we started a first attempt at dynamic UI generation, based on a schema definitions in JSON (**Data Driven UI**) using the frameworks **Vue.js + Quasar**.
 
-The idea was to link to the database schema API, an API that provides UI definitions for forms related to tables and views (entities) in the database. These UI definitions would be structured in JSON format and a client-side interpreter would generate the UI based on JSON information (at the time in Vue.js 2.0 + Quasar framework 1.0).
+The idea was to link to the database schema API, an API that provides UI definitions for forms related to tables and views (entities) in the database. These UI definitions would be structured in JSON format and a client-side interpreter would generate the UI based on JSON information (at that time in Vue.js 2.0 + Quasar framework 1.0).
 
-The form would present a field definition schema for each corresponding entity field in the database with the type of edit component (and other relevant properties) for the field. These controls would be rendered one below the other or within groups (tabs, cards, expansions, and so on). The scheme also provided lookup fields with their dependencies (eg countries, states, cities). The edit controls are based on the **_Quasar Framework's form controls_** with some tweaks such as the use of **_event bus_** for event communication and **_scoped slots_** for property communication between the form, edit controls and the wrapper component. A renderless wrapper component was also provided for interaction with the RESTful/GraphQL API to interact with the data of the corresponding entity in the database.
+The form would present a field definition schema for each corresponding entity field in the database with the type of edit component (and other relevant properties) for the field. These controls would be rendered one below the other or within groups (tabs, cards, expansions, and so on). The scheme also provided lookup fields with their dependencies (eg countries, states, cities). The edit controls are based on the **_Quasar Framework's form controls_** with some tweaks such as the use of **_event bus_** for event communication and **_scoped slots_** with for property communication between the form, edit controls and the wrapper component. Some complex component compositions using slots in the JSON schema were also implemented. A **_renderless wrapper component_** was also provided for interaction with the RESTful/GraphQL API to interact with the data of the corresponding entity in the database.
 
-Most features were excluded from the original code to focus only on dynamic rendering of the main components, i.e. form, groups and edit controls (which is the focus of this article). We only kept the implementation of forms with the fields grouped in tabs.
+For reasons of simplicity, most features were excluded from the original code to focus only on dynamic rendering of the main components, i.e. form, groups and edit controls (_which is the focus of this article_). We only kept the implementation of forms with the fields grouped in tabs.
 
 The Data Driven UI concept allows interesting solutions such as:
 
@@ -19,13 +19,13 @@ The Data Driven UI concept allows interesting solutions such as:
 
 ## Pre-requisites
 
-We assume you have a good knowledge of **git cli**, **javascript**, **Vue.js** and **Quasar UI Framework**. You must have **Vue cli** and **quasar cli** installed on your system installed on your system. This tutorial was run in a **_linux environment_**, but you would easily tweak this for your preferred operating system.
+We assume you have a good knowledge of **git cli**, **javascript**, **Vue.js** and **Quasar Framework**. You must have **Vue cli** and **quasar cli** installed on your system installed on your system. This tutorial was run in a **_linux environment_**, but you would easily tweak this for your preferred operating system.
 
 ## The JSON schema structure
 
 The JSON structure is fairly simple. Define the groups and list of fields in each group item.
 
-However, defining field properties can be as complex as supported Quasar UI controls allow (**_to find out which properties are supported, see the documentation for the corresponding Quasar control_**).
+However, defining field properties can be as complex as supported Quasar UI controls allow (_to find out which properties are supported, see the documentation for the corresponding Quasar control_).
 
 For example, it is allowed to define validation rules on the value entered for the field, editing mask and much more.
 
@@ -327,9 +327,310 @@ export default {
 };
 ```
 
-## The component structure
+## How the magic happens
 
-ToDo...
+### The resources needed in the framework
+
+For the thing to work the framework would have to support the possibility to create components dynamically, conditionally and also support interaction over an array of definitions. Fortunately **Vue.js** is very good at these things!
+
+**Vue.js** suports [**Conditional Rendering - (v-if/v-else/v-else-if)**](https://vuejs.org/guide/essentials/conditional.html), and [**List Rendering - (v-for)**](https://vuejs.org/guide/essentials/list.html). These features allow you to iterate over the JSON schema and conditionally render the ui components.
+
+Conditional rerendering is ok for a few types of controls, but not the best option when you have a lot of them (_in this article we've defined about 20 different types of form controls as bonus for you!_)
+
+For this type of challenge **Vue.js** supports [**dynamic component creation - (:is)**](https://v2.vuejs.org/v2/guide/components-dynamic-async.html). This feature allows you to reference dynamically imported component instance.
+
+Also remember the section above where we mentioned that each control type has its different set of properties. For the thing to work, **Vue.js** would need to allow linking all the properties of an object in batch. And once again Vue.js has the solution for this: [**Passing all properties of an Object - (v-bind)**](https://v2.vuejs.org/v2/guide/components-props.html#Passing-the-Properties-of-an-Object).
+
+In the section below we will see how all the features above will be used together to create a clean and concise solution to the problem.
+
+### The component infrastructure
+
+The **_src/components_** folder has a series of source codes. Let's analyze them to understand how the whole thing was implemented:
+
+#### **\_compoenentMap01.js**
+
+This [**mixin object**](https://v2.vuejs.org/v2/guide/mixins.html?redirect=true) is injected into the form generator. Its function is to provide a data dictionary (**componentMap[]**) in which each component name resolves to a factory that dynamically imports and returns the component instance for that name:
+
+```javascript
+/**
+ * A mixin object that mantain a dictionary de components
+ */
+
+export default {
+  data() {
+    return {
+      componentMap: {},
+    };
+  },
+  methods: {
+    initComponentsMap() {
+      this.componentMap = {
+        // Group components
+        card: () => import("./Card01"),
+        tabs: () => import("./Tabs01"),
+        tab: () => import("./Tab01"),
+        tabpanel: () => import("./TabPanel01"),
+        expansion: () => import("./Expansion01"),
+
+        // Form component
+        form: () => import("./Form01"),
+
+        // From field components
+        inputtext: () => import("./Input01"),
+        inputdate: () => import("./DateInput01"),
+        inputtime: () => import("./TimeInput01"),
+        inputdatetime: () => import("./DateTimeInput01"),
+        select: () => import("./Select01"),
+        checkbox: () => import("./CheckBox01"),
+        radio: () => import("./Radio01"),
+        toggle: () => import("./Toggle01"),
+        btntoggle: () => import("./ButtonToggle01"),
+        optgroup: () => import("./OptionGroup01"),
+        range: () => import("./Range01"),
+        slider: () => import("./Slider01"),
+        datepicker: () => import("./DatePicker01"),
+        timepicker: () => import("./TimePicker01"),
+        rating: () => import("./Rating01"),
+        uploader: () => import("./Uploader01"),
+        editor: () => import("./Editor01"),
+
+        // Other
+        icon: () => import("./Icon01"),
+      };
+    },
+  },
+};
+```
+
+Afterwards the dictionary is used to create dynamic components by their name as:
+
+```html
+<component :is="componentMap['tabs']"></component>
+```
+
+#### **FormGenerator.vue**
+
+This one does the bulk of the work to dynamically assemble the UI based on the JSON schema.
+
+It has a series of functions for internal services, so let's focus on the part that really matters.
+
+- First it imports the componetMap so that it can be injected as a mixin and accessible in the template;
+- Create and provide an event bus to communicate with the componenet ecosystem;
+- Defines the property that will receive the JSON schema;
+- Defines the formData to maintain the input field contents.
+
+```javascript
+
+...
+
+import componentMap from "./_componentMap01";
+
+...
+
+export default {
+  name: "FormGenerator",
+
+  mixins: [componentMap],
+
+  provide() {
+    return {
+      // The event bus to comunicate with components
+      eventBus: this.eventBus,
+    };
+  },
+  props: {
+    // The schema placeholder property
+    schema: {
+      type: Object,
+    },
+  },
+  data() {
+    return {
+      // The event bus instance
+      eventBus: new Vue(),
+...
+      // Form data with input field contents
+      formData: {},
+...
+    }
+  }
+
+...
+
+}
+```
+
+And finally the template that creates the dynamic components - the comments in the template clearly explain how the **Vue.js** features work together to make the thing work:
+
+```html
+<template>
+  <!--
+        Dynamic wrapper `form` component
+        `fixedSchema` is the ajusted version of property `schema`
+      -->
+  <component v-if="fixedSchema" :is="componentMap['form']" ref="form">
+    <!-- 
+          Only shows information about the data input by the user
+        -->
+    <div>{{ getEventInfo + " - " + JSON.stringify(formData) }}</div>
+
+    <!--
+        ==================  
+        Groups with fields
+        ==================
+        -->
+    <div v-if="fixedSchema.groups && fixedSchema.groups.length > 0">
+      <!--
+          ==========
+          TAB Model
+          ==========
+          -->
+      <!--
+            Dynamic `tab` component
+          -->
+      <component
+        v-if="fixedSchema.groupModel == 'tab'"
+        :is="componentMap['tabs']"
+        v-model="selectedGroup"
+        dense
+      >
+        <!--
+              Dynamic `tab itens` components  
+            -->
+        <component
+          v-for="(group, index) in fixedSchema.groups"
+          :is="componentMap['tab']"
+          :key="index"
+          v-bind="group"
+        >
+        </component>
+      </component>
+
+      <q-separator />
+
+      <!--
+            Dynamic `tabpanel` component
+          -->
+      <component
+        v-for="(group, index) in fixedSchema.groups"
+        :is="componentMap['tabpanel']"
+        :key="index"
+        :selected="selectedGroup"
+        v-bind="group"
+      >
+        <div v-if="group.fields && group.fields.length > 0">
+          <!--
+                And finally all UI field controls:
+                - Compoenent type specified by `componentMap[field.fieldType]`
+                - Data contents linked to `formData[field.name]` by `v-model`
+                - All `field` properties linked by `v-bind`
+              -->
+          <component
+            v-for="(field, index) in validFieldComps(group.fields)"
+            :key="index"
+            :is="componentMap[field.fieldType]"
+            v-model="formData[field.name]"
+            v-bind="field"
+            v-show="!field.hidden"
+          >
+          </component>
+        </div>
+      </component>
+    </div>
+  </component>
+</template>
+```
+
+#### **The other ".vue" files in /src/components**
+
+The other components basically encapsulate one or more of the original **Quasar Components** to deliver the desired functionality. They pass the events back to FormGenerator.vue via its event bus and receive event handlers and data from parent by means `v-on="$listners"` and `v-bind="$attrs"`.
+
+As an example we have the following source code from **input.vue**:
+
+```javascript
+<template>
+  <q-input
+    v-bind="$attrs"
+    v-on="$listeners"
+    @input="onInput"
+    @clear="onClear"
+    @focus="onFocus"
+    @blur="onBlur"
+  >
+    <template
+      v-for="(_, slot) of $scopedSlots"
+      v-slot:[slot]="scope"
+    >
+      <slot
+        :name="slot"
+        v-bind="scope"
+      />
+    </template>
+  </q-input>
+</template>
+
+<script>
+import compInfo from './_compInfo'
+
+export default {
+  mixins: [compInfo],
+  inject: ['eventBus'],
+  methods: {
+    onInput (value) {
+      this.eventBus.$emit('input', this, value)
+    },
+    onClear (value) {
+      this.eventBus.$emit('clear', this, value)
+    },
+    onFocus (evt) {
+      this.eventBus.$emit('focus', this, evt)
+    },
+    onBlur (evt) {
+      this.eventBus.$emit('blur', this, evt)
+    }
+  },
+  inheritAttrs: false
+}
+</script>
+```
+
+### How to use the FormGenerator
+
+Now comes the easy part, in `src/pages/FormTest.vue` we have the page that loads a JSON Schema and passes it to **FormGenerator** component - and that's all!
+
+```javascript
+<template>
+  <form-generator :schema="schema" />
+</template>
+
+<script>
+import FormGenerator from "../components/FormGenerator";
+import jsonSchema from "../data/schema.js";
+
+export default {
+  components: { FormGenerator },
+  data() {
+    return {
+      schema: {},
+    };
+  },
+  created() {
+    this.schema = jsonSchema;
+  },
+};
+</script>
+```
+
+By running the example with the command below:
+
+```bash
+# Run the Quasar/Vue application
+$ yarn quasar dev
+```
+
+You get this impressive result:
+
+![SREENSHOT](./assets/screenshot.png)
 
 ## Running the example from this tutorial
 
@@ -360,3 +661,9 @@ Enter the following URL in your preferred browser
 **_http://localhost:8080_**
 
 ## Conclusion
+
+In this article we present the concept of Data Driven UI, which is nothing more than the dynamic creation of a UI based on the information present in a definition file. The article demonstrated how easy it is to define a JSON Schema and create an infrastructure using the Vue.js + Quasar frameworks to dynamically create components. As a bonus we provide about 20 UI components based on the Quasar framework UI components.
+
+Feel free to use the source code and ideas presented here. There is huge room for improvement including migration to **Vue.js 3, Quasar 2 and Typescript**. Now it's up to you!
+
+I thank you for reading. I would be happy to hear your feedback!
