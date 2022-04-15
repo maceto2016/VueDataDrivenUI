@@ -8,13 +8,13 @@ In mid-March/2020 we started a first attempt at dynamic UI generation, based on 
 
 The idea was to link to the database schema API, an API that provides UI definitions for forms related to tables and views (entities) in the database. These UI definitions would be structured in JSON format and a client-side interpreter would generate the UI based on JSON information (at that time in Vue.js 2.0 + Quasar framework 1.0).
 
-The form would present a field definition schema for each corresponding entity field in the database with the type of edit component (and other relevant properties) for the field. These controls would be rendered one below the other or within groups (tabs, cards, expansions, and so on). The scheme also provided lookup fields with their dependencies (eg countries, states, cities). The edit controls are based on the **_Quasar Framework's form controls_** with some tweaks such as the use of **_event bus_** for event communication and **_scoped slots_** with for property communication between the form, edit controls and the wrapper component. Some complex component compositions using slots in the JSON schema were also implemented. A **_renderless wrapper component_** was also provided for interaction with the RESTful/GraphQL API to interact with the data of the corresponding entity in the database.
+The form would present a field definition schema for each corresponding entity field in the database with the type of edit component (and other relevant properties) for the field. These controls would be rendered one below the other or within groups (tabs, cards, expansions, and so on). The scheme also provided lookup fields with their dependencies (eg countries, states, cities). The edit controls are based on the **_Quasar Framework's form controls_** with some tweaks such as the use of **_event bus_** for event communication and **_scoped slots_** for property communication between the form, edit controls and the wrapper component. Some complex component compositions using slots in the JSON schema were also implemented. A **_renderless wrapper component_** was also provided for interaction with the RESTful/GraphQL API to interact with the data of the corresponding entity in the database.
 
 For reasons of simplicity, most features were excluded from the original code to focus only on dynamic rendering of the main components, i.e. form, groups and edit controls (_which is the focus of this article_). We only kept the implementation of forms with the fields grouped in tabs.
 
 The Data Driven UI concept allows interesting solutions such as:
 
-- Define UI model definition schema related to database tables and views thant generates UI dynamically;
+- Define UI model definition schema related to database tables and views than generates UI dynamically;
 - Create the UI model definition schema agnostic to technologies and frameworks (one can develop a generator for **Vue+Quasar**, another in **React+Material UI**, and so on).
 
 ## Pre-requisites
@@ -331,7 +331,7 @@ export default {
 
 ### The resources needed in the framework
 
-For the thing to work the framework would have to support the possibility to create components dynamically, conditionally and also support interaction over an array of definitions. Fortunately **Vue.js** is very good at these things!
+For the thing to work the framework would have to support the possibility to create components dynamically, conditionally and also support iteration over an array of definitions. Fortunately **Vue.js** is very good at these things!
 
 **Vue.js** suports [**Conditional Rendering - (v-if/v-else/v-else-if)**](https://vuejs.org/guide/essentials/conditional.html), and [**List Rendering - (v-for)**](https://vuejs.org/guide/essentials/list.html). These features allow you to iterate over the JSON schema and conditionally render the ui components.
 
@@ -627,6 +627,10 @@ By running the example with the command below:
 # Run the Quasar/Vue application
 $ yarn quasar dev
 ```
+
+and then enter the following URL in your preferred browser:
+
+**_http://localhost:8080_**
 
 You get this impressive result:
 
