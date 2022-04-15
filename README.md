@@ -521,7 +521,7 @@ And finally the template that creates the dynamic components - the comments in t
         <div v-if="group.fields && group.fields.length > 0">
           <!--
                 And finally all UI field controls:
-                - Compoenent type specified by `componentMap[field.fieldType]`
+                - Component type specified by `componentMap[field.fieldType]`
                 - Data contents linked to `formData[field.name]` by `v-model`
                 - All `field` properties linked by `v-bind`
               -->
