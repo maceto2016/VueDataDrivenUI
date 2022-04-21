@@ -1,4 +1,4 @@
-# Data Driven UI with Vue.js and Quasar
+# Data Driven Dynamic UI Generation with Vue.js and Quasar
 
 ![Data Driven UI](./assets/DataDrivenUI-2.png)
 
