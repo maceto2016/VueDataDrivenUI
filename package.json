@@ -6,6 +6,7 @@
   "author": "Marcelo Aceto <maceto06@gmail.com>",
   "private": true,
   "scripts": {
+    "dev": "quasar dev",
     "lint": "eslint --ext .js,.vue ./",
     "test": "echo \"No test specified\" && exit 0"
   },
@@ -35,8 +36,8 @@
     "last 5 Opera versions"
   ],
   "engines": {
-    "node": ">= 10.18.1",
-    "npm": ">= 6.13.4",
-    "yarn": ">= 1.21.1"
+    "node": ">=20.11.0",
+    "npm": "kindly-use-yarn",
+    "yarn": ">=1.22.21"
   }
 }
